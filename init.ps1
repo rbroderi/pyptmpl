@@ -1,6 +1,19 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Write-Utf8NoBom {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Content
+    )
+
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Path, $Content, $utf8NoBom)
+}
+
 function Test-Command {
     param(
         [Parameter(Mandatory = $true)]
@@ -134,7 +147,7 @@ init:
     '[tool.ty.src]', \
     'exclude = ["typings"]' \
     ); \
-    Set-Content -Path $pyprojectPath -Value ($pyprojectLines -join "`n") -Encoding UTF8; \
+    Write-Utf8NoBom -Path $pyprojectPath -Content ($pyprojectLines -join "`n"); \
     Write-Host ('Updated ' + $pyprojectPath + ' with project/build/tool settings.'); \
     $testsDir = Join-Path (Join-Path (Join-Path $packageDir 'src') $package_name) 'tests'; \
     if (-not (Test-Path $testsDir)) { New-Item -ItemType Directory -Path $testsDir -Force | Out-Null }; \
@@ -147,7 +160,7 @@ init:
     ('    module = importlib.import_module("' + $package_name + '")'), \
     '    assert module is not None' \
     ); \
-    Set-Content -Path $smokeTestPath -Value ($smokeTestLines -join "`n") -Encoding UTF8; \
+    Write-Utf8NoBom -Path $smokeTestPath -Content ($smokeTestLines -join "`n"); \
     Write-Host ('Created smoke test at ' + $smokeTestPath); \
     Push-Location $packageDirFull; try { uv venv --python $python_version } finally { Pop-Location }; \
     $gitignorePath = Join-Path $packageDir '.gitignore'; \
@@ -155,7 +168,7 @@ init:
     'src/', '__pycache__/', '*.py[cod]', '*$py.class', '.venv/', 'venv/', 'env/', '.python-version', '.pytest_cache/', '.mypy_cache/', '.ruff_cache/', '.pyright/', '.coverage', 'coverage.xml', 'htmlcov/', 'build/', 'dist/', '.eggs/', '*.egg-info/', 'pip-wheel-metadata/', '.ipynb_checkpoints/' \
     ); \
     if (-not (Test-Path $gitignorePath)) { \
-    Set-Content -Path $gitignorePath -Value ($gitignoreLines -join "`n") -Encoding UTF8; \
+    Write-Utf8NoBom -Path $gitignorePath -Content ($gitignoreLines -join "`n"); \
     Write-Host ('Created ' + $gitignorePath + ' with Python defaults.') \
     } else { \
     $existing = Get-Content -Path $gitignorePath -ErrorAction SilentlyContinue; \
@@ -172,7 +185,7 @@ init:
     '---', 'extends: default', '', 'rules:', '  new-lines: disable', '  document-start: disable', '  line-length: disable' \
     ); \
     if (-not (Test-Path $yamllintPath)) { \
-    Set-Content -Path $yamllintPath -Value ($yamllintLines -join "`n") -Encoding UTF8; \
+    Write-Utf8NoBom -Path $yamllintPath -Content ($yamllintLines -join "`n"); \
     Write-Host ('Created ' + $yamllintPath + '.') \
     } else { \
     Write-Host ($yamllintPath + ' already exists, leaving it unchanged.') \
@@ -198,7 +211,7 @@ init:
     '  }', \
     '}' \
     ); \
-    Set-Content -Path $settingsPath -Value ($settingsLines -join "`n") -Encoding UTF8; \
+    Write-Utf8NoBom -Path $settingsPath -Content ($settingsLines -join "`n"); \
     Write-Host ('Wrote VS Code settings to ' + $settingsPath); \
     $sourceJustfilesDir = Join-Path $workspaceRoot '.justfiles'; \
     $targetJustfilesDir = Join-Path $packageDirFull '.justfiles'; \
@@ -290,7 +303,7 @@ license:
     $updated = [regex]::Replace($updated, '(?m)^requires-python\s*=.*$', ('$0' + "`n" + $classifiersBlock), 1); \
     if ($updated -eq $content) { $updated = ($updated.TrimEnd() + "`n" + $classifiersBlock + "`n") } \
     }; \
-    Set-Content -Path $pyprojectPath -Value $updated -Encoding UTF8; \
+    Write-Utf8NoBom -Path $pyprojectPath -Content $updated; \
     Write-Host ('Updated ' + $pyprojectPath + ' license/classifiers for ' + $chosenName) \
     } else { \
     Write-Host 'pyproject.toml not found, skipping pyproject license update.' \
@@ -720,11 +733,11 @@ github-actions-init:
         "    Write-Host ('Clean complete for ' + `$root + '. Protected root files: init.ps1.')"
     ) -join "`n")
 
-    Set-Content -Path $licenseJustPath -Value $licenseJustContent -Encoding UTF8
-    Set-Content -Path $prekJustPath -Value $prekJustContent -Encoding UTF8
-    Set-Content -Path $githubActionsJustPath -Value $githubActionsJustContent -Encoding UTF8
-    Set-Content -Path $initJustPath -Value $initJustContent -Encoding UTF8
-    Set-Content -Path $cleanJustPath -Value $cleanJustContent -Encoding UTF8
+    Write-Utf8NoBom -Path $licenseJustPath -Content $licenseJustContent
+    Write-Utf8NoBom -Path $prekJustPath -Content $prekJustContent
+    Write-Utf8NoBom -Path $githubActionsJustPath -Content $githubActionsJustContent
+    Write-Utf8NoBom -Path $initJustPath -Content $initJustContent
+    Write-Utf8NoBom -Path $cleanJustPath -Content $cleanJustContent
 
     if (Test-Path $justfilePath) {
         Write-Host 'Using existing justfile.'
@@ -765,7 +778,7 @@ test-cov:
     $projectNameMatch = Select-String -Path 'pyproject.toml' -Pattern '^name\s*=\s*"([^\"]+)"' -AllMatches | Select-Object -First 1; if (-not $projectNameMatch -or $projectNameMatch.Matches.Count -eq 0) { throw 'project.name not found in pyproject.toml.' }; $packageName = $projectNameMatch.Matches[0].Groups[1].Value -replace '-', '_'; uv run pytest --doctest-modules --cov=('src/' + $packageName) --cov-report=term-missing
 '@
 
-    Set-Content -Path $justfilePath -Value $justfileContent -Encoding UTF8
+    Write-Utf8NoBom -Path $justfilePath -Content $justfileContent
 
     return $justfilePath
 }
