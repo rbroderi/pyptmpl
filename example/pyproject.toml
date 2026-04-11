@@ -1,0 +1,53 @@
+﻿[project]
+name = "example"
+version = "2026.04.11.00"
+description = "an example project"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{ name = "rbroderi", email = "x@gmail.com" }]
+requires-python = ">=3.14"
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = ["beartype>=0.22.9"]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.0.3", "pytest-cov>=7.1.0", "pytest-sugar>=1.1.1"]
+
+[build-system]
+requires = ["uv_build>=0.11.6"]
+build-backend = "uv_build"
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "src/example/tests"]
+pythonVersion = "3.14"
+reportUnusedCallResult = "none"
+reportAny = "none"
+reportExplicitAny = "none"
+reportImplicitStringConcatenation = "none"
+reportUnusedFunction = "none"
+reportMissingParameterType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.coverage.run]
+source = ["src/example"]
+omit = ["src/example/tests/*"]
+
+[tool.ty.src]
+exclude = ["typings"]
+
