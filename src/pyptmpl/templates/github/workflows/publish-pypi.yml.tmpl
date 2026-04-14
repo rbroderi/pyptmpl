@@ -48,5 +48,7 @@ jobs:
           path: dist/
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false
       - name: Publish package to PyPI
         run: uv publish --trusted-publishing always --check-url https://pypi.org/simple dist/*

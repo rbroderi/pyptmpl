@@ -18,7 +18,7 @@ exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.data,
+    a.datas,
     [],
     exclude_binaries=False,
     name="pyptmpl",
