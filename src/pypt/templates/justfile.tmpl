@@ -1,9 +1,5 @@
 set shell := ["powershell", "-NoProfile", "-Command"]
 
-import '.justfiles/prek.just'
-import '.justfiles/license.just'
-import '.justfiles/github_actions.just'
-
 _default:
     @just --list
 
@@ -45,10 +41,6 @@ sphinx-build:
     $env:SPHINX_APIDOC_OPTIONS = "show-inheritance"
     $projectNameMatch = Select-String -Path 'pyproject.toml' -Pattern '^name\s*=\s*"([^\"]+)"' -AllMatches | Select-Object -First 1; if (-not $projectNameMatch -or $projectNameMatch.Matches.Count -eq 0) { throw 'project.name not found in pyproject.toml.' }; $packageName = $projectNameMatch.Matches[0].Groups[1].Value -replace '-', '_'; uv run sphinx-apidoc -f --remove-old -o docs_sphinx/apidoc ('src/' + $packageName) ('src/' + $packageName + '/tests')
     uv run sphinx-build -b html docs_sphinx docs/api
-
-# Serve generated Sphinx HTML docs.
-sphinx-serve:
-    uv run python -m http.server 8000 --directory docs/api
 
 # Audit dependencies for known vulnerabilities.
 pip-audit:

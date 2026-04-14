@@ -1,0 +1,3 @@
+title = "Project Docs"
+source = "docs"
+out = "site"

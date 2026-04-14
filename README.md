@@ -19,7 +19,7 @@ It scaffolds a fully-configured Python project using the same conventions seen i
 - Creates a smoke test under `src/<package>/tests/`
 - Creates a virtual environment via `uv venv`
 - Creates `.gitignore`, `.yamllint`, and `.vscode/settings.json`
-- Creates a `justfile` and `.justfiles/` sub-recipes (prek, license, github-actions)
+- Creates a single root `justfile` with quality, test, docs, and build recipes
 - Creates docs/build scaffolding (`docs/`, `docs_sphinx/`, `zensical.toml`, `build.spec`)
 - Creates `.secrets.baseline` alongside pre-commit config for detect-secrets
 - Optionally downloads a license from [scancode-licensedb](https://scancode-licensedb.aboutcode.org/)
@@ -83,10 +83,6 @@ src/pypt/templates/
 ├── yamllint.tmpl                # .yamllint config
 ├── vscode_settings.json.tmpl    # .vscode/settings.json
 ├── justfile.tmpl                # root justfile
-├── justfiles/
-│   ├── prek.just.tmpl           # just prek-init recipe
-│   ├── license.just.tmpl        # just license recipe
-│   ├── github_actions.just.tmpl # just github-actions-init recipe
 ├── pre-commit-config.yaml.tmpl  # .pre-commit-config.yaml
 ├── docs/
 │   ├── index.md.tmpl            # docs site landing page
