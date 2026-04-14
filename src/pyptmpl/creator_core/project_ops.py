@@ -205,8 +205,10 @@ def setup_docs_build_assets(
     """Create docs and build scaffolding files."""
     docs_dir = project_dir / "docs"
     docs_sphinx_dir = project_dir / "docs_sphinx"
+    docs_sphinx_static_dir = docs_sphinx_dir / "_static"
     docs_dir.mkdir(exist_ok=True)
     docs_sphinx_dir.mkdir(exist_ok=True)
+    docs_sphinx_static_dir.mkdir(exist_ok=True)
 
     (docs_dir / "index.md").write_text(
         render_template(load_template("docs/index.md.tmpl"), package_name=package_name),
@@ -218,6 +220,10 @@ def setup_docs_build_assets(
     )
     (docs_sphinx_dir / "conf.py").write_text(
         render_template(load_template("docs_sphinx/conf.py.tmpl"), package_name=package_name),
+        encoding="utf-8",
+    )
+    (docs_sphinx_static_dir / "custom.css").write_text(
+        load_template("docs_sphinx/custom.css.tmpl"),
         encoding="utf-8",
     )
     (project_dir / "zensical.toml").write_text(load_template("zensical.toml.tmpl"), encoding="utf-8")

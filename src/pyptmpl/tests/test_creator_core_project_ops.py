@@ -184,6 +184,7 @@ def test_setup_docs_build_assets(tmp_path: Path) -> None:
     assert (tmp_path / "docs" / "index.md").exists()
     assert (tmp_path / "docs" / "python-api.md").read_text(encoding="utf-8") == "x=pkg"
     assert (tmp_path / "docs_sphinx" / "conf.py").read_text(encoding="utf-8") == "x=pkg"
+    assert (tmp_path / "docs_sphinx" / "_static" / "custom.css").exists()
     assert (tmp_path / "zensical.toml").exists()
     assert (tmp_path / "build.spec").read_text(encoding="utf-8") == "x=pkg"
 

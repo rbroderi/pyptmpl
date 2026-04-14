@@ -27,5 +27,11 @@ root_doc = "apidoc/modules"
 templates_path = ["_templates"]
 exclude_patterns: list[str] = ["_build", "Thumbs.db", ".DS_Store"]
 
-html_theme = "alabaster"
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
+
+html_theme = "furo"
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "navigation_with_keys": True,
+}

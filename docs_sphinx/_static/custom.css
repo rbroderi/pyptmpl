@@ -1,0 +1,27 @@
+/* Tighten API typography and improve readability in Furo */
+:root {
+  --font-stack: "Atkinson Hyperlegible", "Source Sans 3", "Segoe UI", sans-serif;
+  --mono-stack: "JetBrains Mono", "Cascadia Code", monospace;
+}
+
+body {
+  font-family: var(--font-stack);
+}
+
+code,
+pre,
+.sig,
+.sig-name {
+  font-family: var(--mono-stack);
+}
+
+.sig {
+  border-left: 3px solid #0f766e;
+  padding-left: 0.5rem;
+}
+
+dl.py.function,
+dl.py.method,
+dl.py.class {
+  margin-bottom: 1.1rem;
+}

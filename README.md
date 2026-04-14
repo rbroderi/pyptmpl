@@ -88,6 +88,7 @@ src/pyptmpl/templates/
 ├── docs/index.md.tmpl                           # docs site landing page
 ├── docs/python-api.md.tmpl                      # API docs page
 ├── docs_sphinx/conf.py.tmpl                     # Sphinx configuration
+├── docs_sphinx/custom.css.tmpl                  # Sphinx API styling
 ├── zensical.toml.tmpl                           # Zensical site config
 ├── build.spec.tmpl                              # PyInstaller spec template
 ├── github/dependabot.yml.tmpl
