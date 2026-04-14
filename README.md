@@ -13,7 +13,7 @@ It scaffolds a fully-configured Python project.
 
 - Runs `uv init --lib` to create the project skeleton
 - Writes an opinionated `pyproject.toml`
-  (calver, beartype, ruff, basedpyright, pyrefly, coverage)
+  (CalVer, beartype, ruff, basedpyright, pyrefly, coverage)
 - Creates a smoke test under `src/<package>/tests/`
 - Creates a virtual environment via `uv venv`
 - Creates `.gitignore`, `.yamllint`, and `.vscode/settings.json`
