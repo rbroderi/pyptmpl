@@ -41,6 +41,8 @@ def test_match_pypi_classifier_extra_branches() -> None:
     assert got == "License :: FooBSDLike"
     got2 = license_ops.match_pypi_classifier("MIT-or-later", ["License :: MIT-style"])
     assert "MIT-style" in got2
+    got3 = license_ops.match_pypi_classifier("0BSD", ["License :: OSI Approved :: BSD License"])
+    assert "BSD" in got3
 
 
 def test_match_pypi_classifier_continue_then_none() -> None:
@@ -60,7 +62,7 @@ def test_update_pyproject_license_missing_file(tmp_path: Path, capsys: pytest.Ca
 def test_update_pyproject_license_existing_block(tmp_path: Path) -> None:
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(
-        'readme = "README.md"\nlicense = "Old"\nrequires-python = ">=3.13"\nclassifiers = [\n  "Old"\n]\n',
+        '[project]\nreadme = "README.md"\nlicense = "Old"\nrequires-python = ">=3.13"\nclassifiers = [\n  "Old"\n]\n',
         encoding="utf-8",
     )
 
@@ -77,7 +79,10 @@ def test_update_pyproject_license_existing_block(tmp_path: Path) -> None:
 
 def test_update_pyproject_license_insert_paths(tmp_path: Path) -> None:
     pyproject = tmp_path / "pyproject.toml"
-    pyproject.write_text('readme = "README.md"\nrequires-python = ">=3.13"\n', encoding="utf-8")
+    pyproject.write_text(
+        '[project]\nreadme = "README.md"\nrequires-python = ">=3.13"\n',
+        encoding="utf-8",
+    )
     license_ops.update_pyproject_license(
         tmp_path,
         "Custom",
@@ -98,6 +103,54 @@ def test_update_pyproject_license_insert_paths(tmp_path: Path) -> None:
     text2 = pyproject.read_text(encoding="utf-8")
     assert 'license = "Custom2"' in text2
     assert "classifiers = [" in text2
+
+
+def test_update_pyproject_license_missing_project_table(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text("[tool.x]\na = 1\n", encoding="utf-8")
+    license_ops.update_pyproject_license(tmp_path, "MIT", "3.13", lambda _: "License :: X")
+    out = capsys.readouterr().out
+    assert "[project] table not found" in out
+
+
+def test_update_pyproject_license_inline_project_table_without_header(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('project = { name = "x" }\n', encoding="utf-8")
+    license_ops.update_pyproject_license(
+        tmp_path,
+        "MIT",
+        "3.13",
+        lambda _: "License :: OSI Approved :: MIT License",
+    )
+    out = capsys.readouterr().out
+    assert "[project] table not found" in out
+
+
+def test_update_pyproject_license_invalid_toml(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text("[project\n", encoding="utf-8")
+    license_ops.update_pyproject_license(tmp_path, "MIT", "3.13", lambda _: "License :: X")
+    out = capsys.readouterr().out
+    assert "invalid pyproject.toml" in out
+
+
+def test_update_pyproject_license_preserves_following_table(tmp_path: Path) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text(
+        '[project]\nname = "x"\nrequires-python = ">=3.13"\n[tool.ruff]\nline-length = 120\n',
+        encoding="utf-8",
+    )
+    license_ops.update_pyproject_license(
+        tmp_path,
+        "MIT",
+        "3.13",
+        lambda _: "License :: OSI Approved :: MIT License",
+    )
+    text = pyproject.read_text(encoding="utf-8")
+    assert "[tool.ruff]" in text
+    assert "line-length = 120" in text
 
 
 def test_pick_license_happy_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

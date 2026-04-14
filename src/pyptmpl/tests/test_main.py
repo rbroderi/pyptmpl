@@ -173,6 +173,14 @@ def test_build_parser_accepts_flags() -> None:
     assert ns.no_sync is True
 
 
+def test_validate_python_version() -> None:
+    assert __main__._validate_python_version("3.13") == "3.13"
+    with pytest.raises(SystemExit):
+        __main__._validate_python_version("3")
+    with pytest.raises(SystemExit):
+        __main__._validate_python_version("3.13.1")
+
+
 def test_main_github_actions_init_mode(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     args = argparse.Namespace(
         project_name=None,
@@ -209,6 +217,72 @@ def test_main_github_actions_init_mode(monkeypatch: pytest.MonkeyPatch, tmp_path
     rc = __main__.main()
     assert rc == __main__.OK
     assert calls == [(str(tmp_path.resolve()), "3.12")]
+
+
+def test_main_github_actions_init_mode_with_explicit_python_version(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    args = argparse.Namespace(
+        project_name=None,
+        python_version="3.13",
+        description=None,
+        no_license=False,
+        no_prek=False,
+        no_github_actions=False,
+        no_sync=False,
+        github_actions_init=True,
+        project_dir=str(tmp_path),
+    )
+    calls: list[tuple[str, str]] = []
+
+    monkeypatch.setattr(
+        __main__,
+        "_build_parser",
+        lambda: type("P", (), {"parse_args": lambda self: args})(),
+    )
+    monkeypatch.setattr(project_ops, "check_uv", lambda: None)
+    monkeypatch.setattr(
+        ci_ops,
+        "setup_github_actions",
+        lambda project_dir, python_version, load_template, render_template: calls.append(
+            (str(project_dir), python_version)
+        ),
+    )
+
+    rc = __main__.main()
+    assert rc == __main__.OK
+    assert calls == [(str(tmp_path.resolve()), "3.13")]
+
+
+def test_main_github_actions_init_invalid_inferred_python_version(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    args = argparse.Namespace(
+        project_name=None,
+        python_version=None,
+        description=None,
+        no_license=False,
+        no_prek=False,
+        no_github_actions=False,
+        no_sync=False,
+        github_actions_init=True,
+        project_dir=str(tmp_path),
+    )
+
+    monkeypatch.setattr(
+        __main__,
+        "_build_parser",
+        lambda: type("P", (), {"parse_args": lambda self: args})(),
+    )
+    monkeypatch.setattr(project_ops, "check_uv", lambda: None)
+    monkeypatch.setattr(
+        project_ops,
+        "infer_python_version_from_pyproject",
+        lambda a, n, strict=False: "invalid",
+    )
+
+    with pytest.raises(SystemExit):
+        __main__.main()
 
 
 def test_fetch_pypi_license_classifiers_success_and_cache(

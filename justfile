@@ -14,7 +14,7 @@ typecheck:
 
 # Run prek hooks against all files.
 prek:
-    uv run prek run --all-files; uv run prek run --all-files
+    uv run prek run --all-files
 
 test:
     uv run pytest --doctest-modules

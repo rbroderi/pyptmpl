@@ -1,6 +1,6 @@
 [project]
 name = "pyptmpl"
-version = "2026.4.14.0"
+version = "2026.4.14.1"
 description = "Bootstrap a new Python project with best-practice tooling."
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -44,7 +44,7 @@ include = ["src/pyptmpl/templates/**"]
 venvPath = "."
 venv = ".venv"
 include = ["src"]
-pythonVersion = "3.11"
+pythonVersion = "3.13"
 reportUnusedCallResult = "none"
 reportAny = "none"
 reportExplicitAny = "none"

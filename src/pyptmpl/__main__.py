@@ -2,6 +2,7 @@
 
 import argparse
 import importlib.metadata
+import re
 import sys
 import urllib.request
 from functools import lru_cache
@@ -18,7 +19,7 @@ ERROR = 1
 _SCANCODE_BASE_URL = "https://scancode-licensedb.aboutcode.org"
 _SCANCODE_INDEX_URL = f"{_SCANCODE_BASE_URL}/index.json"
 _PYPI_CLASSIFIERS_URL = "https://pypi.org/pypi?%3Aaction=list_classifiers"
-_DEFAULT_GITHUB_ACTIONS_PYTHON = "3.14"
+_DEFAULT_GITHUB_ACTIONS_PYTHON = f"{sys.version_info.major}.{sys.version_info.minor}"
 _DEFAULT_LICENSE_ID = "GPL-3.0-or-later"
 
 
@@ -28,7 +29,7 @@ def _fetch_pypi_license_classifiers() -> list[str]:
     try:
         with urllib.request.urlopen(_PYPI_CLASSIFIERS_URL, timeout=30) as resp:  # noqa: S310
             raw = resp.read().decode("utf-8")
-    except Exception as exc:  # noqa: BLE001
+    except (OSError, UnicodeDecodeError) as exc:
         print(
             f"warning: could not fetch PyPI classifiers ({exc}); falling back to 'Other/Proprietary'.",
             file=sys.stderr,
@@ -152,6 +153,17 @@ def _prompt(label: str) -> str:
     return value
 
 
+def _validate_python_version(value: str) -> str:
+    """Validate a major.minor Python version string."""
+    if re.fullmatch(r"\d+\.\d+", value):
+        return value
+    print(
+        f"error: invalid python_version '{value}'. Expected format like 3.13.",
+        file=sys.stderr,
+    )
+    raise SystemExit(ERROR)
+
+
 def main() -> int:
     """Entry point for the pyptmpl CLI."""
     parser = _build_parser()
@@ -161,11 +173,16 @@ def main() -> int:
 
     if args.github_actions_init:
         project_dir = Path(args.project_dir).resolve()
-        python_version = args.python_version or project_ops.infer_python_version_from_pyproject(
-            project_dir,
-            _DEFAULT_GITHUB_ACTIONS_PYTHON,
-            strict=True,
-        )
+        if args.python_version:
+            python_version = _validate_python_version(args.python_version)
+        else:
+            python_version = _validate_python_version(
+                project_ops.infer_python_version_from_pyproject(
+                    project_dir,
+                    _DEFAULT_GITHUB_ACTIONS_PYTHON,
+                    strict=True,
+                )
+            )
         ci_ops.setup_github_actions(
             project_dir,
             python_version,
@@ -175,7 +192,7 @@ def main() -> int:
         return OK
 
     project_name: str = args.project_name or _prompt("project_name")
-    python_version: str = args.python_version or _prompt("python_version")
+    python_version: str = _validate_python_version(args.python_version or _prompt("python_version"))
     description: str = args.description or _prompt("description")
 
     package_name = project_name.replace("-", "_")

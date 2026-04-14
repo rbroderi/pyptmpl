@@ -153,6 +153,14 @@ def test_setup_vscode(tmp_path: Path) -> None:
     assert (tmp_path / ".vscode" / "settings.json").exists()
 
 
+def test_setup_vscode_existing(tmp_path: Path) -> None:
+    settings = tmp_path / ".vscode" / "settings.json"
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    settings.write_text('{"x": true}', encoding="utf-8")
+    project_ops.setup_vscode(tmp_path, lambda _: '{"python.defaultInterpreterPath": ".venv"}')
+    assert settings.read_text(encoding="utf-8") == '{"x": true}'
+
+
 def test_setup_typos(tmp_path: Path) -> None:
     project_ops.setup_typos(tmp_path, lambda _: '[default.extend-words]\ndatas = "datas"\n')
     typos_config = tmp_path / "typos.toml"
@@ -190,13 +198,13 @@ def test_setup_docs_build_assets(tmp_path: Path) -> None:
 
 
 def test_infer_python_version_from_pyproject_found(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text('requires-python = ">=3.12"\n', encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[project]\nrequires-python = ">=3.12"\n', encoding="utf-8")
     assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11") == "3.12"
 
 
 def test_infer_python_version_default_paths(tmp_path: Path) -> None:
     assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.10") == "3.10"
-    (tmp_path / "pyproject.toml").write_text('name = "x"\n', encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "x"\n', encoding="utf-8")
     assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.9") == "3.9"
 
 
@@ -204,13 +212,27 @@ def test_infer_python_version_from_pyproject_strict_errors(tmp_path: Path) -> No
     with pytest.raises(SystemExit):
         project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=True)
 
-    (tmp_path / "pyproject.toml").write_text('name = "x"\n', encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "x"\n', encoding="utf-8")
+    with pytest.raises(SystemExit):
+        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=True)
+
+
+def test_infer_python_version_invalid_toml_paths(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text("\ufeff[project\n", encoding="utf-8")
+    assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=False) == "3.11"
+    with pytest.raises(SystemExit):
+        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=True)
+
+
+def test_infer_python_version_missing_project_table_strict(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text("[tool.x]\na = 1\n", encoding="utf-8")
+    assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=False) == "3.11"
     with pytest.raises(SystemExit):
         project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=True)
 
 
 def test_infer_project_and_package_name(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text('name = "my-proj"\n', encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text('[project]\nname = "my-proj"\n', encoding="utf-8")
     assert project_ops.infer_project_name_from_pyproject(tmp_path) == "my-proj"
     assert project_ops.infer_package_name_from_pyproject(tmp_path) == "my_proj"
 
@@ -227,6 +249,19 @@ def test_infer_project_name_strict_errors(tmp_path: Path) -> None:
 def test_infer_project_name_missing_name_strict_false(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text("[project]\nversion='0.1.0'\n", encoding="utf-8")
     assert project_ops.infer_project_name_from_pyproject(tmp_path, strict=False) is None
+
+
+def test_infer_project_name_invalid_toml_paths(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text("\ufeff[project\n", encoding="utf-8")
+    assert project_ops.infer_project_name_from_pyproject(tmp_path, strict=False) is None
+    with pytest.raises(SystemExit):
+        project_ops.infer_project_name_from_pyproject(tmp_path, strict=True)
+
+
+def test_setup_gitignore_normalizes_trailing_whitespace(tmp_path: Path) -> None:
+    (tmp_path / ".gitignore").write_text("a  \n", encoding="utf-8")
+    project_ops.setup_gitignore(tmp_path, lambda _: "a\n")
+    assert (tmp_path / ".gitignore").read_text(encoding="utf-8") == "a  \n"
 
 
 def test_infer_package_name_none_branch(tmp_path: Path) -> None:

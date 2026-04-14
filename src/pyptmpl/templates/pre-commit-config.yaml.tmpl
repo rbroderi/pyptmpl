@@ -93,10 +93,12 @@ repos:
     hooks:
       - id: ruff-check
         language_version: python{{python_version}}
+        fail_fast: true
         args: [--fix, --exclude, typings]
         files: ^(src|tests)/.*\.py$
       - id: ruff-format
         language_version: python{{python_version}}
+        fail_fast: true
         args: [--exclude, typings]
         files: ^(src|tests)/.*\.py$
       - id: ruff-check

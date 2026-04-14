@@ -1,9 +1,9 @@
 """Project scaffolding operations grouped by concern."""
 
-import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
@@ -145,13 +145,13 @@ def setup_gitignore(project_dir: Path, load_template: Callable[[str], str]) -> N
     """Create or augment .gitignore with Python-standard entries."""
     gitignore = project_dir / ".gitignore"
     template_entries = load_template("gitignore.tmpl").splitlines()
-    entries = [line for line in template_entries if line]
+    entries = [line.rstrip() for line in template_entries if line.strip()]
     if not gitignore.exists():
         gitignore.write_text(load_template("gitignore.tmpl"), encoding="utf-8")
         print(f"Created {gitignore} with Python defaults.")
         return
 
-    existing = gitignore.read_text(encoding="utf-8").splitlines()
+    existing = [line.rstrip() for line in gitignore.read_text(encoding="utf-8").splitlines()]
     missing = [e for e in entries if e not in existing]
     if missing:
         with gitignore.open("a", encoding="utf-8") as fh:
@@ -176,8 +176,11 @@ def setup_vscode(project_dir: Path, load_template: Callable[[str], str]) -> None
     vscode_dir = project_dir / ".vscode"
     vscode_dir.mkdir(exist_ok=True)
     settings = vscode_dir / "settings.json"
-    settings.write_text(load_template("vscode_settings.json.tmpl"), encoding="utf-8")
-    print(f"Wrote VS Code settings to {settings}")
+    if not settings.exists():
+        settings.write_text(load_template("vscode_settings.json.tmpl"), encoding="utf-8")
+        print(f"Wrote VS Code settings to {settings}")
+    else:
+        print(f"{settings} already exists, leaving it unchanged.")
 
 
 def setup_typos(project_dir: Path, load_template: Callable[[str], str]) -> None:
@@ -242,10 +245,25 @@ def infer_python_version_from_pyproject(project_dir: Path, default: str, *, stri
             raise SystemExit("error: pyproject.toml not found. Run this from your project root.")
         return default
 
-    content = pyproject.read_text(encoding="utf-8")
-    match = re.search(r'(?m)^requires-python\s*=\s*">=([0-9]+\.[0-9]+)"', content)
-    if match:
-        return match.group(1)
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        if strict:
+            raise SystemExit("error: invalid pyproject.toml.") from None
+        return default
+
+    project = data.get("project")
+    if not isinstance(project, dict):
+        if strict:
+            raise SystemExit("error: [project] table not found in pyproject.toml.")
+        return default
+
+    requires_python = project.get("requires-python")
+    if isinstance(requires_python, str) and requires_python.startswith(">="):
+        version = requires_python[2:].strip()
+        if version.count(".") >= 1:
+            major_minor = ".".join(version.split(".")[:2])
+            return major_minor
 
     if strict:
         raise SystemExit("error: requires-python not found in pyproject.toml.")
@@ -260,10 +278,18 @@ def infer_project_name_from_pyproject(project_dir: Path, *, strict: bool = False
             raise SystemExit("error: pyproject.toml not found. Run this from your project root.")
         return None
 
-    content = pyproject.read_text(encoding="utf-8")
-    match = re.search(r'(?m)^name\s*=\s*"([^\"]+)"', content)
-    if match:
-        return match.group(1)
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        if strict:
+            raise SystemExit("error: invalid pyproject.toml.") from None
+        return None
+
+    project = data.get("project")
+    if isinstance(project, dict):
+        name = project.get("name")
+        if isinstance(name, str):
+            return name
 
     if strict:
         raise SystemExit("error: project.name not found in pyproject.toml.")
