@@ -50,5 +50,4 @@ jobs:
           )
           SPHINX_APIDOC_OPTIONS=show-inheritance
           uv run sphinx-apidoc -f --remove-old -o docs_sphinx/apidoc "src/${package_name}" "src/${package_name}/tests"
-          find docs_sphinx/apidoc -name '*.rst' -type f -exec sed -i '/^[[:space:]]*:members:$/d;/^[[:space:]]*:undoc-members:$/d' {} +
           uv run sphinx-build -b html docs_sphinx docs_sphinx/_build/html
