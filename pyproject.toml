@@ -25,6 +25,8 @@ dev = [
   "pytest-cov>=7.1.0",
   "pytest-sugar>=1.1.1",
 ]
+docs = ["sphinx>=8.2.3", "sphinx-autobuild>=2024.10.3", "zensical>=0.0.32"]
+build = ["pyinstaller>=6.16.0"]
 
 [build-system]
 requires = ["uv_build>=0.11.6,<0.12"]
