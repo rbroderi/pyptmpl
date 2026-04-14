@@ -1,0 +1,218 @@
+# Create GitHub automation files (.github/dependabot.yml and workflows).
+github-actions-init:
+    $pyprojectPath = 'pyproject.toml'; \
+    if (-not (Test-Path $pyprojectPath)) { throw 'pyproject.toml not found. Run this from your project root.' }; \
+    $pythonVersion = '3.14'; \
+    $requiresMatch = Select-String -Path $pyprojectPath -Pattern '^requires-python\s*=\s*">=([0-9]+\.[0-9]+)"' -AllMatches | Select-Object -First 1; \
+    if ($requiresMatch -and $requiresMatch.Matches.Count -gt 0) { $pythonVersion = $requiresMatch.Matches[0].Groups[1].Value }; \
+    $targetGithubDir = '.github'; \
+    $targetWorkflowsDir = Join-Path $targetGithubDir 'workflows'; \
+    if (-not (Test-Path $targetGithubDir)) { New-Item -ItemType Directory -Path $targetGithubDir | Out-Null }; \
+    if (-not (Test-Path $targetWorkflowsDir)) { New-Item -ItemType Directory -Path $targetWorkflowsDir | Out-Null }; \
+    $dependabotPath = Join-Path $targetGithubDir 'dependabot.yml'; \
+    $lintFormatPath = Join-Path $targetWorkflowsDir 'lint-format.yml'; \
+    $publishPath = Join-Path $targetWorkflowsDir 'publish-pypi.yml'; \
+    $qualityPath = Join-Path $targetWorkflowsDir 'quality-security.yml'; \
+    $testsPath = Join-Path $targetWorkflowsDir 'tests.yml'; \
+    $typecheckPath = Join-Path $targetWorkflowsDir 'typecheck.yml'; \
+    $dependabotLines = @( \
+    'version: 2', \
+    'updates:', \
+    '  - package-ecosystem: "github-actions"', \
+    '    directory: "/"', \
+    '    schedule:', \
+    '      interval: "weekly"', \
+    '    open-pull-requests-limit: 10', \
+    '  - package-ecosystem: "uv"', \
+    '    directory: "/"', \
+    '    schedule:', \
+    '      interval: "weekly"', \
+    '    open-pull-requests-limit: 10' \
+    ); \
+    $lintFormatLines = @( \
+    'name: Lint and Format', \
+    '"on":', \
+    '  pull_request:', \
+    '  push:', \
+    '    branches: [main]', \
+    '  workflow_dispatch:', \
+    'permissions:', \
+    '  contents: read', \
+    'jobs:', \
+    '  lint-format:', \
+    '    name: Lint and format checks', \
+    '    runs-on: ubuntu-latest', \
+    '    timeout-minutes: 30', \
+    '    steps:', \
+    '      - name: Checkout repository', \
+    '        uses: actions/checkout@v6', \
+    '      - name: Set up Python', \
+    '        uses: actions/setup-python@v6', \
+    '        with:', \
+    ('          python-version: "' + $pythonVersion + '"'), \
+    '      - name: Set up uv', \
+    '        uses: astral-sh/setup-uv@v7', \
+    '      - name: Install project with dev dependencies', \
+    '        run: uv sync --extra dev', \
+    '      - name: Run lint and format hooks', \
+    '        run: |', \
+    '          uv run prek run ssort --all-files', \
+    '          uv run prek run fix-byte-order-marker check-merge-conflict \', \
+    '            end-of-file-fixer trailing-whitespace mixed-line-ending --all-files', \
+    '          uv run prek run check-yaml check-toml check-added-large-files \', \
+    '            check-executables-have-shebangs \', \
+    '            check-shebang-scripts-are-executable \', \
+    '            --all-files', \
+    '          uv run prek run yamlfmt yamllint --all-files', \
+    '          uv run prek run typos mdformat markdownlint-cli2 --all-files', \
+    '          uv run prek run taplo-format taplo-lint --all-files', \
+    '          uv run prek run pyupgrade pycln autopep695-format --all-files', \
+    '          uv run prek run ruff-check ruff-format ruff-check-post-format \', \
+    '            refurb --all-files' \
+    ); \
+    $publishLines = @( \
+    'name: Publish to PyPI', \
+    '"on":', \
+    '  release:', \
+    '    types: [published]', \
+    '  workflow_dispatch:', \
+    'permissions:', \
+    '  contents: read', \
+    'jobs:', \
+    '  build:', \
+    '    name: Build distributions', \
+    '    runs-on: ubuntu-latest', \
+    '    steps:', \
+    '      - name: Checkout repository', \
+    '        uses: actions/checkout@v6', \
+    '      - name: Set up Python', \
+    '        uses: actions/setup-python@v6', \
+    '        with:', \
+    ('          python-version: "' + $pythonVersion + '"'), \
+    '      - name: Set up uv', \
+    '        uses: astral-sh/setup-uv@v7', \
+    '      - name: Install check tooling', \
+    '        run: |', \
+    '          python -m pip install --upgrade pip', \
+    '          python -m pip install twine', \
+    '      - name: Build sdist and wheel', \
+    '        run: uv build --no-sources', \
+    '      - name: Check distributions', \
+    '        run: python -m twine check dist/*', \
+    '      - name: Upload distributions artifact', \
+    '        uses: actions/upload-artifact@v7', \
+    '        with:', \
+    '          name: python-distributions', \
+    '          path: dist/', \
+    '  publish:', \
+    '    name: Publish to PyPI', \
+    '    needs: build', \
+    '    runs-on: ubuntu-latest', \
+    '    environment:', \
+    '      name: pypi', \
+    '    permissions:', \
+    '      contents: read', \
+    '      id-token: write', \
+    '    steps:', \
+    '      - name: Download distributions artifact', \
+    '        uses: actions/download-artifact@v8', \
+    '        with:', \
+    '          name: python-distributions', \
+    '          path: dist/', \
+    '      - name: Set up uv', \
+    '        uses: astral-sh/setup-uv@v7', \
+    '      - name: Publish package to PyPI', \
+    '        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple dist/*' \
+    ); \
+    $qualityLines = @( \
+    'name: Quality and Security', \
+    '"on":', \
+    '  pull_request:', \
+    '  push:', \
+    '    branches: [main]', \
+    '  workflow_dispatch:', \
+    'permissions:', \
+    '  contents: read', \
+    'jobs:', \
+    '  quality-security:', \
+    '    name: Quality and security checks', \
+    '    runs-on: ubuntu-latest', \
+    '    timeout-minutes: 20', \
+    '    steps:', \
+    '      - name: Checkout repository', \
+    '        uses: actions/checkout@v6', \
+    '      - name: Set up Python', \
+    '        uses: actions/setup-python@v6', \
+    '        with:', \
+    ('          python-version: "' + $pythonVersion + '"'), \
+    '      - name: Set up uv', \
+    '        uses: astral-sh/setup-uv@v7', \
+    '      - name: Install project with dev dependencies', \
+    '        run: uv sync --extra dev', \
+    '      - name: Run quality and security hooks', \
+    '        run: uv run prek run vulture deptry detect-secrets --all-files' \
+    ); \
+    $testsLines = @( \
+    'name: Tests', \
+    '"on":', \
+    '  pull_request:', \
+    '  push:', \
+    '    branches: [main]', \
+    '  workflow_dispatch:', \
+    'permissions:', \
+    '  contents: read', \
+    'jobs:', \
+    '  tests:', \
+    '    name: Test suite with coverage', \
+    '    runs-on: ubuntu-latest', \
+    '    timeout-minutes: 20', \
+    '    steps:', \
+    '      - name: Checkout repository', \
+    '        uses: actions/checkout@v6', \
+    '      - name: Set up Python', \
+    '        uses: actions/setup-python@v6', \
+    '        with:', \
+    ('          python-version: "' + $pythonVersion + '"'), \
+    '      - name: Set up uv', \
+    '        uses: astral-sh/setup-uv@v7', \
+    '      - name: Install project with dev dependencies', \
+    '        run: uv sync --extra dev', \
+    '      - name: Run coverage gate hook', \
+    '        run: uv run prek run coverage-100 --all-files' \
+    ); \
+    $typecheckLines = @( \
+    'name: Typecheck', \
+    '"on":', \
+    '  pull_request:', \
+    '  push:', \
+    '    branches: [main]', \
+    '  workflow_dispatch:', \
+    'permissions:', \
+    '  contents: read', \
+    'jobs:', \
+    '  typecheck:', \
+    '    name: Type analysis', \
+    '    runs-on: ubuntu-latest', \
+    '    timeout-minutes: 20', \
+    '    steps:', \
+    '      - name: Checkout repository', \
+    '        uses: actions/checkout@v6', \
+    '      - name: Set up Python', \
+    '        uses: actions/setup-python@v6', \
+    '        with:', \
+    ('          python-version: "' + $pythonVersion + '"'), \
+    '      - name: Set up uv', \
+    '        uses: astral-sh/setup-uv@v7', \
+    '      - name: Install project with dev dependencies', \
+    '        run: uv sync --extra dev', \
+    '      - name: Run type-check hooks', \
+    '        run: uv run prek run basedpyright ty-check --all-files' \
+    ); \
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false); \
+    [System.IO.File]::WriteAllText($dependabotPath, ($dependabotLines -join "`n"), $utf8NoBom); \
+    [System.IO.File]::WriteAllText($lintFormatPath, ($lintFormatLines -join "`n"), $utf8NoBom); \
+    [System.IO.File]::WriteAllText($publishPath, ($publishLines -join "`n"), $utf8NoBom); \
+    [System.IO.File]::WriteAllText($qualityPath, ($qualityLines -join "`n"), $utf8NoBom); \
+    [System.IO.File]::WriteAllText($testsPath, ($testsLines -join "`n"), $utf8NoBom); \
+    [System.IO.File]::WriteAllText($typecheckPath, ($typecheckLines -join "`n"), $utf8NoBom); \
+    Write-Host ('Created GitHub automation files under ' + $targetGithubDir)

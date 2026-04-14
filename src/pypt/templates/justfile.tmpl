@@ -1,0 +1,28 @@
+set shell := ["powershell", "-NoProfile", "-Command"]
+
+import '.justfiles/prek.just'
+import '.justfiles/license.just'
+import '.justfiles/github_actions.just'
+import '.justfiles/clean.just'
+
+_default:
+    @just --list
+
+ruff:
+    uvx ruff check --exclude typings
+    uvx ruff format --exclude typings
+
+# Run Python type checking with basedpyright.
+typecheck:
+    uvx basedpyright
+
+# Run prek hooks against all files.
+prek:
+    uv run prek run --all-files; uv run prek run --all-files
+
+test:
+    uv run pytest --doctest-modules
+
+# Run tests with coverage report.
+test-cov:
+    $projectNameMatch = Select-String -Path 'pyproject.toml' -Pattern '^name\s*=\s*"([^\"]+)"' -AllMatches | Select-Object -First 1; if (-not $projectNameMatch -or $projectNameMatch.Matches.Count -eq 0) { throw 'project.name not found in pyproject.toml.' }; $packageName = $projectNameMatch.Matches[0].Groups[1].Value -replace '-', '_'; uv run pytest --doctest-modules --cov=('src/' + $packageName) --cov-report=term-missing

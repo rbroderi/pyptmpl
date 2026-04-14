@@ -1,0 +1,52 @@
+[project]
+name = "{{project_name}}"
+version = "{{version}}"
+description = "{{description}}"
+readme = "README.md"
+license = "{{license_id}}"
+authors = [{ name = "{{author_name}}", email = "{{author_email}}" }]
+requires-python = ">={{python_version}}"
+classifiers = [
+  "{{license_classifier}}",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: {{python_version}}",
+]
+dependencies = ["beartype>=0.22.9"]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.0.3", "pytest-cov>=7.1.0", "pytest-sugar>=1.1.1"]
+
+[build-system]
+requires = ["uv_build>=0.11.6"]
+build-backend = "uv_build"
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "src/{{package_name}}/tests"]
+pythonVersion = "{{python_version}}"
+reportUnusedCallResult = "none"
+reportAny = "none"
+reportExplicitAny = "none"
+reportImplicitStringConcatenation = "none"
+reportUnusedFunction = "none"
+reportMissingParameterType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+
+[tool.ruff]
+line-length = 120
+target-version = "py{{py_no_dot}}"
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.coverage.run]
+source = ["src/{{package_name}}"]
+omit = ["src/{{package_name}}/tests/*"]
+
+[tool.ty.src]
+exclude = ["typings"]
