@@ -2,7 +2,7 @@ a = Analysis(
     ["src/{{package_name}}/__main__.py"],
     pathex=["src"],
     binaries=[],
-    data=[],
+    datas=[("src/{{package_name}}/templates", "{{package_name}}/templates")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -1,6 +1,6 @@
 [project]
 name = "pyptmpl"
-version = "2026.4.14.1"
+version = "2026.4.14.2"
 description = "Bootstrap a new Python project with best-practice tooling."
 readme = "README.md"
 license = "GPL-3.0-or-later"
