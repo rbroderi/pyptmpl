@@ -18,3 +18,5 @@ dist/
 *.egg-info/
 pip-wheel-metadata/
 .ipynb_checkpoints/
+docs/api/
+docs_sphinx/apidoc/
