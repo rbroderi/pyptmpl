@@ -157,7 +157,7 @@ repos:
         stages: [pre-commit]
       - id: coverage-100
         name: coverage-100
-        entry: uv run pytest --doctest-modules --cov=src/pypt --cov-report=term-missing --cov-fail-under=100 src/pypt
+        entry: uv run pytest --doctest-modules --cov=src/pyptmpl --cov-report=term-missing --cov-fail-under=100 src/pyptmpl
         language: system
         pass_filenames: false
         always_run: true

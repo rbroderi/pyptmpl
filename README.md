@@ -1,10 +1,10 @@
-# pypt
+# pyptmpl
 
 Bootstrap a new Python project with best-practice tooling,
 runnable with a single command:
 
 ```sh
-uvx pypt my-project
+uvx pyptmpl my-project
 ```
 
 It scaffolds a fully-configured Python project.
@@ -39,7 +39,7 @@ It scaffolds a fully-configured Python project.
 ## Usage
 
 ```text
-uvx pypt [OPTIONS] [PROJECT_NAME]
+uvx pyptmpl [OPTIONS] [PROJECT_NAME]
 
 positional arguments:
   project_name          Name of the new project (prompted if omitted)
@@ -61,21 +61,21 @@ options:
 
 ```sh
 # Fully interactive
-uvx pypt
+uvx pyptmpl
 
 # Supply all required values up front
-uvx pypt my-lib --python-version 3.13 --description "A cool library"
+uvx pyptmpl my-lib --python-version 3.13 --description "A cool library"
 
 # Skip optional steps
-uvx pypt my-lib -p 3.13 -d "A cool library" --no-license --no-prek --no-github-actions
+uvx pyptmpl my-lib -p 3.13 -d "A cool library" --no-license --no-prek --no-github-actions
 ```
 
 ## Project structure
 
-`pypt` keeps all its boilerplate in `src/pypt/templates/`:
+`pyptmpl` keeps all its boilerplate in `src/pyptmpl/templates/`:
 
 ```text
-src/pypt/templates/
+src/pyptmpl/templates/
 ├── pyproject.toml.tmpl          # pyproject.toml skeleton
 ├── test_smoke.py.tmpl           # smoke test
 ├── gitignore.tmpl               # .gitignore entries

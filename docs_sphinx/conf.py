@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../src"))
 
-project = "pypt"
+project = "pyptmpl"
 author = "Project contributors"
 
 extensions = [

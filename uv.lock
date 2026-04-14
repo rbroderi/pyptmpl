@@ -141,7 +141,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pypt"
+name = "pyptmpl"
 version = "2026.4.13.0"
 source = { editable = "." }
 

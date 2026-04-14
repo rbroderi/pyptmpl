@@ -1,24 +1,24 @@
-# pypt
+# pyptmpl
 
-Reference documentation for `pypt`.
+Reference documentation for `pyptmpl`.
 
 ## Install
 
 ```bash
-pip install pypt
+pip install pyptmpl
 ```
 
 Or with uv:
 
 ```bash
-uv add pypt
+uv add pyptmpl
 ```
 
 ## CLI quick start
 
 ```bash
 # Show CLI help (if your project exposes a CLI)
-python -m pypt --help
+python -m pyptmpl --help
 ```
 
 ## Python API

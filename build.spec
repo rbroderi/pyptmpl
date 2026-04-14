@@ -1,5 +1,5 @@
 a = Analysis(
-    ["src/pypt/__main__.py"],
+    ["src/pyptmpl/__main__.py"],
     pathex=["src"],
     binaries=[],
     data=[],
@@ -21,7 +21,7 @@ exe = EXE(
     a.data,
     [],
     exclude_binaries=False,
-    name="pypt",
+    name="pyptmpl",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

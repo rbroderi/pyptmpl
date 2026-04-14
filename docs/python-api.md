@@ -7,7 +7,7 @@ Use a simple import path for quick tasks, or construct richer workflows in code.
 ## One-liner
 
 ```python
-from pypt import __version__
+from pyptmpl import __version__
 
 print(__version__)
 ```
@@ -17,6 +17,6 @@ print(__version__)
 ```python
 from importlib import import_module
 
-pkg = import_module("pypt")
+pkg = import_module("pyptmpl")
 print(pkg.__name__)
 ```
