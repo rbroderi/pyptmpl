@@ -84,6 +84,7 @@ src/pyptmpl/templates/
 ├── vscode_settings.json.tmpl                    # .vscode/settings.json
 ├── justfile.tmpl                                # root justfile
 ├── pre-commit-config.yaml.tmpl                  # .pre-commit-config.yaml
+├── typos.toml.tmpl                              # typos dictionary overrides
 ├── docs/index.md.tmpl                           # docs site landing page
 ├── docs/python-api.md.tmpl                      # API docs page
 ├── docs_sphinx/conf.py.tmpl                     # Sphinx configuration

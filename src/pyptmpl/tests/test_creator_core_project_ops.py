@@ -83,7 +83,9 @@ def test_write_pyproject(tmp_path: Path) -> None:
         description="desc",
         author=project_ops.GitAuthor("A", "a@b"),
         default_license_id="LGPL-3.0-or-later",
-        load_template=lambda _: "name={{project_name}}\nlicense={{license_id}}\ncls={{license_classifier}}",
+        load_template=lambda _: (
+            "name={{project_name}}\nlicense={{license_id}}\ncls={{license_classifier}}"
+        ),
         render_template=templates.render_template,
         get_license_classifier=lambda _: "License :: X",
     )
@@ -115,7 +117,9 @@ def test_create_venv(tmp_path: Path) -> None:
 def test_sync_project(tmp_path: Path) -> None:
     recorder = CommandRecorder()
     project_ops.sync_project(tmp_path, recorder)
-    assert recorder.calls == [["uv", "sync", "--extra", "dev", "--extra", "docs", "--extra", "build"]]
+    assert recorder.calls == [
+        ["uv", "sync", "--extra", "dev", "--extra", "docs", "--extra", "build"]
+    ]
 
 
 def test_setup_gitignore_create_and_update(tmp_path: Path) -> None:
@@ -153,6 +157,24 @@ def test_setup_vscode(tmp_path: Path) -> None:
     assert (tmp_path / ".vscode" / "settings.json").exists()
 
 
+def test_setup_typos(tmp_path: Path) -> None:
+    project_ops.setup_typos(
+        tmp_path, lambda _: '[default.extend-words]\ndatas = "datas"\n'
+    )
+    typos_config = tmp_path / "typos.toml"
+    assert typos_config.exists()
+    assert "datas" in typos_config.read_text(encoding="utf-8")
+
+
+def test_setup_typos_existing(tmp_path: Path) -> None:
+    t = tmp_path / "typos.toml"
+    t.write_text("x\n", encoding="utf-8")
+    project_ops.setup_typos(
+        tmp_path, lambda _: '[default.extend-words]\ndatas = "datas"\n'
+    )
+    assert t.read_text(encoding="utf-8") == "x\n"
+
+
 def test_setup_justfiles(tmp_path: Path) -> None:
     project_ops.setup_justfiles(tmp_path, lambda _: "content")
     assert (tmp_path / "justfile").exists()
@@ -175,23 +197,38 @@ def test_setup_docs_build_assets(tmp_path: Path) -> None:
 
 
 def test_infer_python_version_from_pyproject_found(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text('requires-python = ">=3.12"\n', encoding="utf-8")
-    assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11") == "3.12"
+    (tmp_path / "pyproject.toml").write_text(
+        'requires-python = ">=3.12"\n', encoding="utf-8"
+    )
+    assert (
+        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11")
+        == "3.12"
+    )
 
 
 def test_infer_python_version_default_paths(tmp_path: Path) -> None:
-    assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.10") == "3.10"
+    assert (
+        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.10")
+        == "3.10"
+    )
     (tmp_path / "pyproject.toml").write_text('name = "x"\n', encoding="utf-8")
-    assert project_ops.infer_python_version_from_pyproject(tmp_path, default="3.9") == "3.9"
+    assert (
+        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.9")
+        == "3.9"
+    )
 
 
 def test_infer_python_version_from_pyproject_strict_errors(tmp_path: Path) -> None:
     with pytest.raises(SystemExit):
-        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=True)
+        project_ops.infer_python_version_from_pyproject(
+            tmp_path, default="3.11", strict=True
+        )
 
     (tmp_path / "pyproject.toml").write_text('name = "x"\n', encoding="utf-8")
     with pytest.raises(SystemExit):
-        project_ops.infer_python_version_from_pyproject(tmp_path, default="3.11", strict=True)
+        project_ops.infer_python_version_from_pyproject(
+            tmp_path, default="3.11", strict=True
+        )
 
 
 def test_infer_project_and_package_name(tmp_path: Path) -> None:
@@ -210,7 +247,9 @@ def test_infer_project_name_strict_errors(tmp_path: Path) -> None:
 
 
 def test_infer_project_name_missing_name_strict_false(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text("[project]\nversion='0.1.0'\n", encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nversion='0.1.0'\n", encoding="utf-8"
+    )
     assert project_ops.infer_project_name_from_pyproject(tmp_path, strict=False) is None
 
 

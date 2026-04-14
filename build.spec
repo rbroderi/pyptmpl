@@ -2,7 +2,7 @@ a = Analysis(
     ["src/pyptmpl/__main__.py"],
     pathex=["src"],
     binaries=[],
-    data=[],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

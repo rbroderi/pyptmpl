@@ -40,7 +40,9 @@ def _fetch_pypi_license_classifiers() -> list[str]:
             _pypi_license_classifiers_cache = []
             return _pypi_license_classifiers_cache
         _pypi_license_classifiers_cache = [
-            line.strip() for line in raw.splitlines() if line.strip().startswith("License ::")
+            line.strip()
+            for line in raw.splitlines()
+            if line.strip().startswith("License ::")
         ]
     return _pypi_license_classifiers_cache
 
@@ -58,10 +60,14 @@ def _run(cmd: list[str], cwd: Path | None = None) -> None:
 
 
 def _get_license_classifier(spdx_key: str) -> str:
-    return license_ops.match_pypi_classifier(spdx_key, _fetch_pypi_license_classifiers())
+    return license_ops.match_pypi_classifier(
+        spdx_key, _fetch_pypi_license_classifiers()
+    )
 
 
-def _update_pyproject_license(project_dir: Path, spdx_name: str, python_version: str) -> None:
+def _update_pyproject_license(
+    project_dir: Path, spdx_name: str, python_version: str
+) -> None:
     license_ops.update_pyproject_license(
         project_dir,
         spdx_name,
@@ -128,17 +134,25 @@ def setup_vscode(project_dir: Path) -> None:
     project_ops.setup_vscode(project_dir, _load_template)
 
 
+def setup_typos(project_dir: Path) -> None:
+    project_ops.setup_typos(project_dir, _load_template)
+
+
 def setup_justfiles(project_dir: Path, package_name: str) -> None:
     del package_name
     project_ops.setup_justfiles(project_dir, _load_template)
 
 
 def setup_docs_build_assets(project_dir: Path, package_name: str) -> None:
-    project_ops.setup_docs_build_assets(project_dir, package_name, _load_template, _render)
+    project_ops.setup_docs_build_assets(
+        project_dir, package_name, _load_template, _render
+    )
 
 
 def setup_prek(project_dir: Path, package_name: str, python_version: str) -> None:
-    ci_ops.setup_prek(project_dir, package_name, python_version, _run, _load_template, _render)
+    ci_ops.setup_prek(
+        project_dir, package_name, python_version, _run, _load_template, _render
+    )
 
 
 def setup_github_actions(project_dir: Path, python_version: str) -> None:
@@ -151,7 +165,9 @@ def infer_python_version_from_pyproject(
     *,
     strict: bool = False,
 ) -> str:
-    return project_ops.infer_python_version_from_pyproject(project_dir, default, strict=strict)
+    return project_ops.infer_python_version_from_pyproject(
+        project_dir, default, strict=strict
+    )
 
 
 def pick_license(project_dir: Path, python_version: str) -> None:
@@ -261,7 +277,9 @@ def main() -> int:
 
     if args.github_actions_init:
         project_dir = Path(args.project_dir).resolve()
-        python_version = args.python_version or infer_python_version_from_pyproject(project_dir, strict=True)
+        python_version = args.python_version or infer_python_version_from_pyproject(
+            project_dir, strict=True
+        )
         setup_github_actions(project_dir, python_version)
         return OK
 
@@ -277,12 +295,15 @@ def main() -> int:
     print(f"\nCreating project '{project_name}' (Python {python_version})…\n")
 
     project_dir = init_project(project_name, python_version, cwd)
-    write_pyproject(project_dir, project_name, package_name, python_version, description, author)
+    write_pyproject(
+        project_dir, project_name, package_name, python_version, description, author
+    )
     create_smoke_test(project_dir, package_name)
     create_venv(project_dir, python_version)
     setup_gitignore(project_dir)
     setup_yamllint(project_dir)
     setup_vscode(project_dir)
+    setup_typos(project_dir)
     setup_justfiles(project_dir, package_name)
     setup_docs_build_assets(project_dir, package_name)
 
