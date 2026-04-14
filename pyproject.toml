@@ -1,0 +1,65 @@
+[project]
+name = "pypt"
+version = "2026.4.13.0"
+description = "Bootstrap a new Python project with best-practice tooling."
+readme = "README.md"
+license = "LGPL-3.0-or-later"
+authors = [{ name = "rbroderi", email = "rbroderi@gmail.com" }]
+requires-python = ">=3.11"
+classifiers = [
+  "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = []
+
+[project.scripts]
+pypt = "pypt.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+  "prek>=0.3.8",
+  "pytest>=9.0.3",
+  "pytest-cov>=7.1.0",
+  "pytest-sugar>=1.1.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.6"]
+build-backend = "uv_build"
+
+[tool.uv_build]
+include = ["src/pypt/templates/**"]
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+include = ["src"]
+pythonVersion = "3.11"
+reportUnusedCallResult = "none"
+reportAny = "none"
+reportExplicitAny = "none"
+reportImplicitStringConcatenation = "none"
+reportUnusedFunction = "none"
+reportMissingParameterType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownMemberType = "none"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.coverage.run]
+source = ["src/pypt"]
+omit = ["src/pypt/tests/*"]
+
+[tool.ty.src]
+exclude = ["typings"]
