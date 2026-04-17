@@ -1,6 +1,6 @@
 [project]
 name = "pyptmpl"
-version = "2026.4.16.0"
+version = "2026.4.16.1"
 description = "Bootstrap a new Python project with best-practice tooling."
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -13,7 +13,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = ["beaupy>=3.11.0"]
+dependencies = ["beartype>=0.22.9", "beaupy>=3.11.0"]
 
 [project.scripts]
 pyptmpl = "pyptmpl.__main__:main"
@@ -71,3 +71,9 @@ omit = ["src/pyptmpl/tests/*"]
 
 [tool.pyrefly]
 permissive-ignores = true
+
+[tool.pytest.ini_options]
+addopts = "--ignore=delme --ignore=docs_sphinx"
+
+[tool.uv.workspace]
+members = ["f", "delme"]

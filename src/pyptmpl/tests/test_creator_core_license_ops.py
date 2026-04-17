@@ -1,5 +1,6 @@
 # pyright: reportPrivateLocalImportUsage=false,reportPrivateUsage=false,reportUnknownLambdaType=false,reportUnusedParameter=false,reportUnannotatedClassAttribute=false
 
+import os
 import tomllib
 from pathlib import Path
 
@@ -326,11 +327,11 @@ def test_select_license_with_back_uses_beaupy_when_tty(
 
     class _FakeBeaupy:
         @staticmethod
-        def select(options, return_index=False, pagination=False, page_size=5):  # noqa: ANN001
+        def select(options, return_index=False):  # noqa: ANN001
             assert return_index is True
-            assert pagination is True
-            assert page_size == 12
             assert options[0] == "< Back to filter >"
+            # Single-page lists do not include explicit page controls.
+            assert options == ["< Back to filter >", "MIT", "BSD-3-Clause"]
             return 1
 
     monkeypatch.setattr(license_ops, "beaupy", _FakeBeaupy())
@@ -351,8 +352,8 @@ def test_select_license_with_back_beaupy_back_and_cancel(
 
     class _BackBeaupy:
         @staticmethod
-        def select(options, return_index=False, pagination=False, page_size=5):  # noqa: ANN001
-            del options, return_index, pagination, page_size
+        def select(options, return_index=False):  # noqa: ANN001
+            del options, return_index
             return 0
 
     monkeypatch.setattr(license_ops, "beaupy", _BackBeaupy())
@@ -360,12 +361,84 @@ def test_select_license_with_back_beaupy_back_and_cancel(
 
     class _CancelBeaupy:
         @staticmethod
-        def select(options, return_index=False, pagination=False, page_size=5):  # noqa: ANN001
-            del options, return_index, pagination, page_size
+        def select(options, return_index=False):  # noqa: ANN001
+            del options, return_index
             return None
 
     monkeypatch.setattr(license_ops, "beaupy", _CancelBeaupy())
     assert license_ops._select_license_with_back([{"spdx_license_key": "MIT", "license": "mit.LICENSE"}]) is None
+
+
+def test_select_license_with_back_shows_navigation_hints_for_beaupy(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(license_ops, "_can_use_beaupy", lambda: True)
+
+    class _FakeBeaupy:
+        @staticmethod
+        def select(options, return_index=False):  # noqa: ANN001
+            del options, return_index
+            return 0
+
+    monkeypatch.setattr(license_ops, "beaupy", _FakeBeaupy())
+    assert license_ops._select_license_with_back([{"spdx_license_key": "MIT", "license": "mit.LICENSE"}]) is None
+    out = capsys.readouterr().out
+    assert "Page 1/1" in out
+    assert "Enter to select" in out
+    assert "Ctrl+C to cancel" in out
+
+
+def test_select_license_with_back_beaupy_explicit_paging_controls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(license_ops, "_can_use_beaupy", lambda: True)
+    monkeypatch.setattr(
+        license_ops.shutil,
+        "get_terminal_size",
+        lambda *_args, **_kwargs: os.terminal_size((80, 20)),
+    )
+
+    seen_options: list[list[str]] = []
+    calls = iter([2, 1, 3])
+
+    class _PagingBeaupy:
+        @staticmethod
+        def select(options, return_index=False):  # noqa: ANN001
+            assert return_index is True
+            seen_options.append(list(options))
+            return next(calls)
+
+    monkeypatch.setattr(license_ops, "beaupy", _PagingBeaupy())
+    licenses: list[dict[str, object]] = [
+        {"spdx_license_key": f"LIC-{i:02d}", "license": f"l{i}.LICENSE"} for i in range(1, 16)
+    ]
+
+    got = license_ops._select_license_with_back(licenses)
+    assert got is not None
+    assert got["spdx_license_key"] == "LIC-01"
+    assert seen_options[0][0] == "< Back to filter >"
+    assert seen_options[0][1].startswith("< Prev page (1/2)")
+    assert seen_options[0][2].startswith("< Next page (1/2)")
+    assert seen_options[1][1].startswith("< Prev page (2/2)")
+    assert seen_options[1][2].startswith("< Next page (2/2)")
+
+
+def test_beaupy_license_page_size_uses_terminal_height(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        license_ops.shutil,
+        "get_terminal_size",
+        lambda *_args, **_kwargs: os.terminal_size((80, 11)),
+    )
+    assert license_ops._beaupy_license_page_size() == 1
+
+    monkeypatch.setattr(
+        license_ops.shutil,
+        "get_terminal_size",
+        lambda *_args, **_kwargs: os.terminal_size((120, 60)),
+    )
+    assert license_ops._beaupy_license_page_size() == 12
 
 
 def test_prompt_text_uses_beaupy_when_tty(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -394,6 +467,77 @@ def test_prompt_text_beaupy_none_value_returns_empty(
 
     monkeypatch.setattr(license_ops, "beaupy", _FakeBeaupy())
     assert license_ops._prompt_text("Filter licenses by text (blank for all): ") == ""
+
+
+def test_run_with_beaupy_interrupts_toggles_and_restores_config(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _Config:
+        raise_on_interrupt = False
+
+    class _Api:
+        Config = _Config
+
+    monkeypatch.setattr(license_ops, "_beaupy_api", lambda: _Api)
+
+    seen: dict[str, bool] = {}
+
+    def action() -> str:
+        seen["during"] = _Config.raise_on_interrupt
+        return "ok"
+
+    got = license_ops._run_with_beaupy_interrupts(action)
+    assert got == "ok"
+    assert seen["during"] is True
+    assert _Config.raise_on_interrupt is False
+
+
+def test_run_with_beaupy_interrupts_restores_config_on_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _Config:
+        raise_on_interrupt = False
+
+    class _Api:
+        Config = _Config
+
+    monkeypatch.setattr(license_ops, "_beaupy_api", lambda: _Api)
+
+    def boom() -> None:
+        raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError, match="boom"):
+        license_ops._run_with_beaupy_interrupts(boom)
+
+    assert _Config.raise_on_interrupt is False
+
+
+def test_pick_license_keyboard_interrupt_cancels_with_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    index_json = """[
+      {"license":"mit.LICENSE","spdx_license_key":"MIT","license_key":"mit","is_exception":false,"is_deprecated":false}
+    ]"""
+
+    def fake_urlopen(url: str, timeout: int = 30) -> FakeResponse:
+        del timeout
+        if url == "INDEX":
+            return FakeResponse(index_json)
+        return FakeResponse("MIT text")
+
+    monkeypatch.setattr(
+        license_ops,
+        "_prompt_text",
+        lambda _prompt: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+
+    with pytest.raises(SystemExit, match="selection canceled by user"):
+        license_ops.pick_license(
+            tmp_path,
+            "3.13",
+            "INDEX",
+            "BASE/",
+            fake_urlopen,
+            lambda *_: None,
+        )
 
 
 def test_replace_project_scalar_updates_existing_key() -> None:

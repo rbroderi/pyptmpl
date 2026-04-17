@@ -2,6 +2,7 @@
 
 import json
 import re
+import shutil
 import sys
 import tomllib
 from collections.abc import Callable
@@ -14,6 +15,20 @@ import beaupy
 
 def _beaupy_api() -> Any:
     return cast(Any, beaupy)
+
+
+def _run_with_beaupy_interrupts(action: Callable[[], Any]) -> Any:
+    api = _beaupy_api()
+    config = getattr(api, "Config", None)
+    if config is None or not hasattr(config, "raise_on_interrupt"):
+        return action()
+
+    previous = bool(config.raise_on_interrupt)
+    config.raise_on_interrupt = True
+    try:
+        return action()
+    finally:
+        config.raise_on_interrupt = previous
 
 
 def match_pypi_classifier(spdx_key: str, classifiers: list[str]) -> str:
@@ -190,11 +205,22 @@ def _can_use_beaupy() -> bool:
 
 def _prompt_text(prompt: str) -> str:
     if _can_use_beaupy():
-        value = _beaupy_api().prompt(prompt)
+        value = _run_with_beaupy_interrupts(lambda: _beaupy_api().prompt(prompt))
         if value is None:
             return ""
         return str(value).strip()
     return input(prompt).strip()
+
+
+def _beaupy_license_page_size() -> int:
+    """Choose a page size that fits short terminals without scrolling."""
+    # Keep the selection menu compact enough to fit in common small terminal windows.
+    terminal_lines = shutil.get_terminal_size(fallback=(80, 24)).lines
+    # Reserve space for contextual prints, prompt chrome, and breathing room.
+    available_option_rows = max(4, terminal_lines - 8)
+    # Budget for Back/Prev/Next rows so navigation controls remain visible.
+    max_license_rows = available_option_rows - 3
+    return max(1, min(12, max_license_rows))
 
 
 def _select_license_with_back(
@@ -203,12 +229,50 @@ def _select_license_with_back(
     print(f"Showing {len(licenses)} licenses.")
 
     if _can_use_beaupy():
-        options = ["< Back to filter >"]
-        options.extend(str(lic.get("spdx_license_key") or lic.get("license_key", "")) for lic in licenses)
-        selected_index = _beaupy_api().select(options, return_index=True, pagination=True, page_size=12)
-        if selected_index in (None, 0):
-            return None
-        return licenses[int(selected_index) - 1]
+        page_size = _beaupy_license_page_size()
+        total_pages = max(1, (len(licenses) + page_size - 1) // page_size)
+        page_index = 0
+
+        while True:
+            start = page_index * page_size
+            end = start + page_size
+            page_licenses = licenses[start:end]
+
+            options: list[str] = ["< Back to filter >"]
+            option_kinds: list[tuple[str, int | None]] = [("back", None)]
+
+            if total_pages > 1:
+                options.append(f"< Prev page ({page_index + 1}/{total_pages}) >")
+                option_kinds.append(("prev", None))
+                options.append(f"< Next page ({page_index + 1}/{total_pages}) >")
+                option_kinds.append(("next", None))
+
+            for idx, lic in enumerate(page_licenses):
+                name = str(lic.get("spdx_license_key") or lic.get("license_key", ""))
+                options.append(name)
+                option_kinds.append(("license", start + idx))
+
+            print(
+                f"Page {page_index + 1}/{total_pages}. "
+                "Use Up/Down to move. Prev/Next page controls are at the top. "
+                "Enter to select, Esc to go back, Ctrl+C to cancel."
+            )
+            selected_index = _run_with_beaupy_interrupts(lambda: _beaupy_api().select(options, return_index=True))
+
+            if selected_index is None:
+                return None
+
+            kind, payload = option_kinds[int(selected_index)]
+            if kind == "back":
+                return None
+            if kind == "prev":
+                page_index = (page_index - 1) % total_pages
+                continue
+            if kind == "next":
+                page_index = (page_index + 1) % total_pages
+                continue
+            if payload is not None:
+                return licenses[payload]
 
     for i, lic in enumerate(licenses, 1):
         name = lic.get("spdx_license_key") or lic.get("license_key", "")
@@ -262,24 +326,27 @@ def pick_license(
 
     print(f"Found {len(licenses)} licenses.")
 
-    while True:
-        query = _prompt_text("Filter licenses by text (blank for all): ")
-        if query:
-            filtered = [
-                lic
-                for lic in licenses
-                if query.lower() in str(lic.get("spdx_license_key", "")).lower()
-                or query.lower() in str(lic.get("license_key", "")).lower()
-            ]
-            if not filtered:
-                raise SystemExit(f"error: no licenses matched filter: {query}")
-            visible = filtered
-        else:
-            visible = licenses
+    try:
+        while True:
+            query = _prompt_text("Filter licenses by text (blank for all): ")
+            if query:
+                filtered = [
+                    lic
+                    for lic in licenses
+                    if query.lower() in str(lic.get("spdx_license_key", "")).lower()
+                    or query.lower() in str(lic.get("license_key", "")).lower()
+                ]
+                if not filtered:
+                    raise SystemExit(f"error: no licenses matched filter: {query}")
+                visible = filtered
+            else:
+                visible = licenses
 
-        chosen = _select_license_with_back(visible)
-        if chosen is not None:
-            break
+            chosen = _select_license_with_back(visible)
+            if chosen is not None:
+                break
+    except KeyboardInterrupt as exc:
+        raise SystemExit("error: selection canceled by user") from exc
 
     file_name = str(chosen["license"])
     base_url = scancode_base_url.rstrip("/") + "/"

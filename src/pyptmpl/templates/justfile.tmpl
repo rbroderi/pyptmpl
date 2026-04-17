@@ -17,11 +17,11 @@ prek:
     uv run prek run --all-files
 
 test:
-    uv run pytest --doctest-modules
+    uv run pytest --doctest-modules --ignore=docs_sphinx
 
 # Run tests with coverage report.
 test-cov:
-    uv run python -c "import pathlib,tomllib,pytest; data=tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); name=data.get('project', {}).get('name'); assert isinstance(name, str), 'project.name not found in pyproject.toml.'; p=name.replace('-', '_'); raise SystemExit(pytest.main(['--doctest-modules', f'--cov=src/{p}', '--cov-report=term-missing']))"
+    uv run python -c "import pathlib,tomllib,pytest; data=tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); name=data.get('project', {}).get('name'); assert isinstance(name, str), 'project.name not found in pyproject.toml.'; p=name.replace('-', '_'); raise SystemExit(pytest.main(['--doctest-modules', '--ignore=docs_sphinx', f'--cov=src/{p}', '--cov-report=term-missing']))"
 
 # Run mutation testing on the package source.
 mutate:
