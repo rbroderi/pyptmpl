@@ -2,10 +2,18 @@
 
 import json
 import re
+import sys
 import tomllib
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+from typing import cast
+
+import beaupy
+
+
+def _beaupy_api() -> Any:
+    return cast(Any, beaupy)
 
 
 def match_pypi_classifier(spdx_key: str, classifiers: list[str]) -> str:
@@ -176,6 +184,51 @@ def update_pyproject_license(
     print(f"Updated {pyproject} license/classifiers for {spdx_name}")
 
 
+def _can_use_beaupy() -> bool:
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def _prompt_text(prompt: str) -> str:
+    if _can_use_beaupy():
+        value = _beaupy_api().prompt(prompt)
+        if value is None:
+            return ""
+        return str(value).strip()
+    return input(prompt).strip()
+
+
+def _select_license_with_back(
+    licenses: list[dict[str, object]],
+) -> dict[str, object] | None:
+    print(f"Showing {len(licenses)} licenses.")
+
+    if _can_use_beaupy():
+        options = ["< Back to filter >"]
+        options.extend(str(lic.get("spdx_license_key") or lic.get("license_key", "")) for lic in licenses)
+        selected_index = _beaupy_api().select(options, return_index=True, pagination=True, page_size=12)
+        if selected_index in (None, 0):
+            return None
+        return licenses[int(selected_index) - 1]
+
+    for i, lic in enumerate(licenses, 1):
+        name = lic.get("spdx_license_key") or lic.get("license_key", "")
+        print(f"{i}. {name}")
+    print("0. Back to filter")
+
+    selection_str = input("Enter number: ").strip()
+    try:
+        selection = int(selection_str)
+    except ValueError as exc:
+        raise SystemExit("error: invalid selection.") from exc
+
+    if selection == 0:
+        return None
+    if selection < 1 or selection > len(licenses):
+        raise SystemExit("error: selection out of range.")
+
+    return licenses[selection - 1]
+
+
 def pick_license(
     project_dir: Path,
     python_version: str,
@@ -208,33 +261,26 @@ def pick_license(
         raise SystemExit("error: no licenses found in remote index.")
 
     print(f"Found {len(licenses)} licenses.")
-    query = input("Filter licenses by text (blank for all): ").strip()
-    if query:
-        filtered = [
-            lic
-            for lic in licenses
-            if query.lower() in str(lic.get("spdx_license_key", "")).lower()
-            or query.lower() in str(lic.get("license_key", "")).lower()
-        ]
-        if not filtered:
-            raise SystemExit(f"error: no licenses matched filter: {query}")
-        licenses = filtered
 
-    print(f"Showing {len(licenses)} licenses.")
-    for i, lic in enumerate(licenses, 1):
-        name = lic.get("spdx_license_key") or lic.get("license_key", "")
-        print(f"{i}. {name}")
+    while True:
+        query = _prompt_text("Filter licenses by text (blank for all): ")
+        if query:
+            filtered = [
+                lic
+                for lic in licenses
+                if query.lower() in str(lic.get("spdx_license_key", "")).lower()
+                or query.lower() in str(lic.get("license_key", "")).lower()
+            ]
+            if not filtered:
+                raise SystemExit(f"error: no licenses matched filter: {query}")
+            visible = filtered
+        else:
+            visible = licenses
 
-    selection_str = input("Enter number: ").strip()
-    try:
-        selection = int(selection_str)
-    except ValueError as exc:
-        raise SystemExit("error: invalid selection.") from exc
+        chosen = _select_license_with_back(visible)
+        if chosen is not None:
+            break
 
-    if selection < 1 or selection > len(licenses):
-        raise SystemExit("error: selection out of range.")
-
-    chosen = licenses[selection - 1]
     file_name = str(chosen["license"])
     base_url = scancode_base_url.rstrip("/") + "/"
     url = base_url + file_name.lstrip("/")

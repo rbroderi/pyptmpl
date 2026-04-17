@@ -21,7 +21,11 @@ test:
 
 # Run tests with coverage report.
 test-cov:
-    uv run python -c "import pathlib,re,pytest; c=pathlib.Path('pyproject.toml').read_text(encoding='utf-8'); m=re.search(r'(?m)^name\\s*=\\s*\"([^\"]+)\"', c); assert m, 'project.name not found in pyproject.toml.'; p=m.group(1).replace('-', '_'); raise SystemExit(pytest.main(['--doctest-modules', f'--cov=src/{p}', '--cov-report=term-missing']))"
+    uv run python -c "import pathlib,tomllib,pytest; data=tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); name=data.get('project', {}).get('name'); assert isinstance(name, str), 'project.name not found in pyproject.toml.'; p=name.replace('-', '_'); raise SystemExit(pytest.main(['--doctest-modules', f'--cov=src/{p}', '--cov-report=term-missing']))"
+
+# Run mutation testing on the package source.
+mutate:
+    uv run python -c "import pathlib,tomllib,subprocess,sys; data=tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); name=data.get('project', {}).get('name'); assert isinstance(name, str), 'project.name not found in pyproject.toml.'; p=name.replace('-', '_'); raise SystemExit(subprocess.call(['uvx','--from','fest-mutate','fest','run','--source',f'src/{p}/**/*.py','--exclude',f'src/{p}/tests/**/*.py','--filter-operators','!constant_replace','--filter-operators','!return_value','--filter-operators','!break_continue','--filter-operators','!augmented_assign','--fail-under','100']))"
 
 # Build documentation site.
 docs-build:
@@ -37,7 +41,7 @@ docs-serve:
 
 # Generate and build API docs with Sphinx.
 sphinx-build:
-    uv run python -c "import os,pathlib,re,shutil,subprocess; shutil.rmtree('docs_sphinx/apidoc', ignore_errors=True); shutil.rmtree('docs/api', ignore_errors=True); c=pathlib.Path('pyproject.toml').read_text(encoding='utf-8'); m=re.search(r'(?m)^name\\s*=\\s*\"([^\"]+)\"', c); assert m, 'project.name not found in pyproject.toml.'; p=m.group(1).replace('-', '_'); env=dict(os.environ); env['SPHINX_APIDOC_OPTIONS']='show-inheritance'; subprocess.check_call(['uv','run','sphinx-apidoc','-f','--remove-old','-o','docs_sphinx/apidoc',f'src/{p}',f'src/{p}/tests'], env=env); subprocess.check_call(['uv','run','sphinx-build','-b','html','docs_sphinx','docs/api'])"
+    uv run python -c "import os,pathlib,tomllib,shutil,subprocess; shutil.rmtree('docs_sphinx/apidoc', ignore_errors=True); shutil.rmtree('docs/api', ignore_errors=True); data=tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8')); name=data.get('project', {}).get('name'); assert isinstance(name, str), 'project.name not found in pyproject.toml.'; p=name.replace('-', '_'); env=dict(os.environ); env['SPHINX_APIDOC_OPTIONS']='show-inheritance'; subprocess.check_call(['uv','run','sphinx-apidoc','-f','--remove-old','-o','docs_sphinx/apidoc',f'src/{p}',f'src/{p}/tests'], env=env); subprocess.check_call(['uv','run','sphinx-build','-b','html','docs_sphinx','docs/api'])"
 
 # Audit dependencies for known vulnerabilities.
 pip-audit:

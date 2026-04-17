@@ -54,6 +54,21 @@ wheels = [
 ]
 
 [[package]]
+name = "beaupy"
+version = "3.11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "emoji" },
+    { name = "python-yakh" },
+    { name = "questo" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/78/b2/1478a56b9669eda5fc6f9fed9e9aa47fbe73b564c5fb5cd55d719cf5b32e/beaupy-3.11.0.tar.gz", hash = "sha256:c264d13061c5741ceef5462b3752e572a0a7c3b8bd8dac870d10aec8a7d6b2ee", size = 16550 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/0e/58181784f84f5944e2539e9605fdb1941bb2156c6382d5d11937a86128ec/beaupy-3.11.0-py3-none-any.whl", hash = "sha256:43dfa75f8a0ebb11c031426b481b27266f8623fbb28d695521ac6dc2c27479f0", size = 14860 },
+]
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.14.3"
 source = { registry = "https://pypi.org/simple" }
@@ -241,6 +256,28 @@ wheels = [
 ]
 
 [[package]]
+name = "emoji"
+version = "2.15.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/78/0d2db9382c92a163d7095fc08efff7800880f830a152cfced40161e7638d/emoji-2.15.0.tar.gz", hash = "sha256:eae4ab7d86456a70a00a985125a03263a5eac54cd55e51d7e184b1ed3b6757e4", size = 615483 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e1/5e/4b5aaaabddfacfe36ba7768817bd1f71a7a810a43705e531f3ae4c690767/emoji-2.15.0-py3-none-any.whl", hash = "sha256:205296793d66a89d88af4688fa57fd6496732eb48917a87175a023c8138995eb", size = 608433 },
+]
+
+[[package]]
+name = "fest-mutate"
+version = "0.1.3"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/cc/3645b68b0b8373a95f455c09c0a1bfa72d14937c977b2f7a5bc0de10c25f/fest_mutate-0.1.3-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:f538884b0c7ddd1260dbae9d0bf4fe221f5b62872fcd4cdec854701d3fd57615", size = 2967511 },
+    { url = "https://files.pythonhosted.org/packages/12/aa/60f1de73f03aaf4e8cc6e822d6e82e54b072a8f645e5b5c009bc32a374a0/fest_mutate-0.1.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:8d26d81149e4dff39a1ea0c1593e238a67d7952fcb6cf6f2cdc0d4219c736666", size = 2851006 },
+    { url = "https://files.pythonhosted.org/packages/7d/c8/7eb55991496419d1fd7a309d1610c0b1a094b2967399bbea99686aa25178/fest_mutate-0.1.3-py3-none-manylinux_2_39_aarch64.whl", hash = "sha256:78931d8aa80cc1eb4ec5cc66a91219f5d4eaff48ba9d3cdcd94002cef942981e", size = 2963043 },
+    { url = "https://files.pythonhosted.org/packages/07/ca/ff32e42a775c5f28684e4d7ee31ca344edca82de06b17540ed45c30fa44e/fest_mutate-0.1.3-py3-none-manylinux_2_39_x86_64.whl", hash = "sha256:05d137c5e19146417f171846d0c3af522d734cf52db9d963ae8a8cca16944679", size = 3090618 },
+    { url = "https://files.pythonhosted.org/packages/95/59/51ab024b4cd1b2ee61573c9417c1cd02a72574ebe18b7f737d19e9de9ecb/fest_mutate-0.1.3-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:d6e71b84b5c8fda7a7b7c22ff6d86cdbb49b4097c889b6ef393b1227588b0754", size = 3158185 },
+    { url = "https://files.pythonhosted.org/packages/fb/ba/818ab6c6741afdc7624c38a7e809fe67841577cab13f8baecbe0fdf1b8bc/fest_mutate-0.1.3-py3-none-win_amd64.whl", hash = "sha256:98b68e7080485915f9c30f917d05af1b4a663eec9e47cf12b99b0a17a07627ea", size = 2921279 },
+]
+
+[[package]]
 name = "furo"
 version = "2025.12.19"
 source = { registry = "https://pypi.org/simple" }
@@ -326,6 +363,18 @@ wheels = [
 ]
 
 [[package]]
+name = "markdown-it-py"
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mdurl" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5b/f5/4ec618ed16cc4f8fb3b701563655a69816155e79e24a17b651541804721d/markdown_it_py-4.0.0.tar.gz", hash = "sha256:cb0a2b4aa34f932c007117b194e945bd74e0ec24133ceb5bac59009cda1cb9f3", size = 73070 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl", hash = "sha256:87327c59b172c5011896038353a81343b6754500a08cd7a4973bb48c6d578147", size = 87321 },
+]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -375,6 +424,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fb/df/5bd7a48c256faecd1d36edc13133e51397e41b73bb77e1a69deab746ebac/markupsafe-3.0.3-cp314-cp314t-win32.whl", hash = "sha256:915c04ba3851909ce68ccc2b8e2cd691618c4dc4c4232fb7982bca3f41fd8c3d", size = 14819 },
     { url = "https://files.pythonhosted.org/packages/1a/8a/0402ba61a2f16038b48b39bccca271134be00c5c9f0f623208399333c448/markupsafe-3.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4faffd047e07c38848ce017e8725090413cd80cbc23d86e55c587bf979e579c9", size = 15426 },
     { url = "https://files.pythonhosted.org/packages/70/bc/6f1c2f612465f5fa89b95bead1f44dcb607670fd42891d8fdcd5d039f4f4/markupsafe-3.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:32001d6a8fc98c8cb5c947787c5d08b0a50663d139f1305bac5885d98d9b40fa", size = 14146 },
+]
+
+[[package]]
+name = "mdurl"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979 },
 ]
 
 [[package]]
@@ -493,14 +551,18 @@ wheels = [
 
 [[package]]
 name = "pyptmpl"
-version = "2026.4.14.2"
+version = "2026.4.16.0"
 source = { editable = "." }
+dependencies = [
+    { name = "beaupy" },
+]
 
 [package.optional-dependencies]
 build = [
     { name = "pyinstaller" },
 ]
 dev = [
+    { name = "fest-mutate" },
     { name = "prek" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -515,6 +577,8 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "beaupy", specifier = ">=3.11.0" },
+    { name = "fest-mutate", marker = "extra == 'dev'", specifier = ">=0.1.3" },
     { name = "furo", marker = "extra == 'docs'", specifier = ">=2025.7.19" },
     { name = "prek", marker = "extra == 'dev'", specifier = ">=0.3.8" },
     { name = "pyinstaller", marker = "extra == 'build'", specifier = ">=6.16.0" },
@@ -571,6 +635,15 @@ wheels = [
 ]
 
 [[package]]
+name = "python-yakh"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d2/77/bbff0a1e6fb03b8cc2cc373a44cfbbb4fd22863c657f8630f4a0f5eb207c/python_yakh-0.4.1.tar.gz", hash = "sha256:da03e800b4f2f5d85344f1668e852687c12dc1a99a03c65cf3dc13a3680da49d", size = 3988 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/42/72571b24514b5f59c328f12e5294b246958951b889fac2bd5321e08a4bab/python_yakh-0.4.1-py3-none-any.whl", hash = "sha256:d69507e13e03d09cefd88030f74b6d5369b67de004be975a35be28eb286122e4", size = 5826 },
+]
+
+[[package]]
 name = "pywin32-ctypes"
 version = "0.2.3"
 source = { registry = "https://pypi.org/simple" }
@@ -616,6 +689,19 @@ wheels = [
 ]
 
 [[package]]
+name = "questo"
+version = "0.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-yakh" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/e6/4a86ccd5710c2fddae92786f15f2c69637b417905ff239d7424b55e342cb/questo-0.4.2.tar.gz", hash = "sha256:bcc917c2f1a65872e2bd02e79e226a716fd2d68a1ebe0d23c1828aa116aa6da6", size = 10474 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/04/9e/2669ac7d718539a3783c3a6c440b3440b68193b59d763d7f89d33c0b1e8e/questo-0.4.2-py3-none-any.whl", hash = "sha256:1afce34a638601b54fbd697e99e7551813fafb513fe523165394eb12f9607b43", size = 12442 },
+]
+
+[[package]]
 name = "requests"
 version = "2.33.1"
 source = { registry = "https://pypi.org/simple" }
@@ -628,6 +714,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/5f/a4/98b9c7c6428a668bf7e42ebb7c79d576a1c3c1e3ae2d47e674b468388871/requests-2.33.1.tar.gz", hash = "sha256:18817f8c57c6263968bc123d237e3b8b08ac046f5456bd1e307ee8f4250d3517", size = 134120 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/8e/7540e8a2036f79a125c1d2ebadf69ed7901608859186c856fa0388ef4197/requests-2.33.1-py3-none-any.whl", hash = "sha256:4e6d1ef462f3626a1f0a0a9c42dd93c63bad33f9f1c1937509b8c5c8718ab56a", size = 64947 },
+]
+
+[[package]]
+name = "rich"
+version = "15.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markdown-it-py" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654 },
 ]
 
 [[package]]
